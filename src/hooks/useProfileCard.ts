@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { User } from "../types/types";
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, collection, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 export const useProfileCard = () => {
@@ -11,11 +11,23 @@ export const useProfileCard = () => {
     const getUsers = async () => {
       const data = await getDocs(colRef);
       data.forEach((doc) => {
-        setUser(doc.data() as User);
+        setUser({ ...(doc.data() as User), id: doc.id });
       });
     };
     getUsers();
   }, []);
 
-  return { user };
+  const updateUser = async (userId: string, newData: any) => {
+    try {
+      const userDoc = doc(db, "user", userId);
+      await updateDoc(userDoc, newData);
+
+      setUser((prevUser) => ({ ...prevUser, ...newData }));
+      console.log("User updated successfully");
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  };
+
+  return { user, updateUser };
 };
