@@ -1,4 +1,4 @@
-# Instructions for This Task
+# Instructions For This Task
 
 This is a basic project that has a profile card for a user displaying their first and last name, birthday, and email. 
 
@@ -13,3 +13,5 @@ The form validation should ensure no field is left blank and that the email is a
 Use the Material UI Date Picker to edit the birthday (https://mui.com/x/react-date-pickers/date-picker/). 
 
 When the user hits submit, you should use firebase to update the "user" collection (firebase is already installed with the package.json file) in the database and update the state holding the user information. Once the database and state have been updated, the dialog should close and you should be able to see the updated information on the card without hitting refresh.
+
+** Please note other people may also be working with this task, which means the data in the database for this user may change periodically.
