@@ -1,9 +1,10 @@
 import { Avatar, Paper, Typography } from "@mui/material";
 import React from "react";
 import { useProfileCard } from "../../hooks/useProfileCard";
+import ProfileEditForm from "./ProfileEditForm";
 
 const ProfileCard = () => {
-  const { user } = useProfileCard();
+  const { user, updateUser } = useProfileCard();
   return (
     <>
       {user && (
@@ -18,6 +19,7 @@ const ProfileCard = () => {
           <Typography variant="h3">{`${user.firstName} ${user.lastName}`}</Typography>
           <Typography sx={{mt: 2}}>{user.email}</Typography>
           <Typography sx={{mt: 2}}>{user.birthday}</Typography>
+          <ProfileEditForm user={user} updateUser={updateUser} />
         </Paper>
       )}
     </>
