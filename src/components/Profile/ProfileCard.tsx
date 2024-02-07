@@ -9,8 +9,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+
 import React, { ChangeEvent } from "react";
 import { useProfileCard } from "../../hooks/useProfileCard";
+import { User } from "../../types/types";
 
 const ProfileCard = () => {
   const { user, updateUser } = useProfileCard();
@@ -22,18 +24,34 @@ const ProfileCard = () => {
     setEditUser(user);
   }, [user]);
 
+  const validateForm = (user: User | null): boolean => {
+    if (!user) {
+      console.error("User is null");
+      return false;
+    }
+
+    const { firstName, lastName, email, birthday } = user;
+
+    if (!firstName || !lastName || !email || !birthday) {
+      console.error("Form validation failed: All fields are required");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditUser((prev) => (prev === null ? null : { ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
-    if (editUser !== null) {
+    if (editUser && validateForm(editUser)) {
       updateUser(editUser);
+      setIsOpenModal(false);
     } else {
-      console.error("User is null");
+      console.error("User is null or form validation failed");
     }
-    setIsOpenModal(false);
   };
 
   return (
@@ -71,7 +89,6 @@ const ProfileCard = () => {
               component: "form",
               onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
                 e.preventDefault();
-                console.log("e", e.target);
               },
             }}
           >
@@ -105,6 +122,7 @@ const ProfileCard = () => {
                 onChange={handleChange}
                 fullWidth
               />
+
               <TextField
                 required
                 sx={{ mt: 2 }}
