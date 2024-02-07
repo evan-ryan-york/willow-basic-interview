@@ -92,7 +92,7 @@ const ProfileCard = () => {
               },
             }}
           >
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle color="black">Edit Profile</DialogTitle>
             <DialogContent>
               <FormField
                 label="First Name"
