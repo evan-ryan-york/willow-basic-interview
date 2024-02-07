@@ -6,13 +6,13 @@ import {
   DialogContent,
   DialogActions,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
 
 import React, { ChangeEvent } from "react";
 import { useProfileCard } from "../../hooks/useProfileCard";
 import { User } from "../../types/types";
+import FormField from "./FormField";
 
 const ProfileCard = () => {
   const { user, updateUser } = useProfileCard();
@@ -94,44 +94,32 @@ const ProfileCard = () => {
           >
             <DialogTitle>Edit Profile</DialogTitle>
             <DialogContent>
-              <TextField
-                required
-                sx={{ mt: 2 }}
+              <FormField
                 label="First Name"
                 name="firstName"
                 value={editUser?.firstName}
                 onChange={handleChange}
-                fullWidth
               />
-              <TextField
-                required
-                sx={{ mt: 2 }}
+              <FormField
                 label="Last Name"
                 name="lastName"
                 value={editUser?.lastName}
                 onChange={handleChange}
-                fullWidth
               />
-              <TextField
-                required
-                sx={{ mt: 2 }}
+              <FormField
                 label="Email"
                 name="email"
                 type="email"
                 value={editUser?.email}
                 onChange={handleChange}
-                fullWidth
               />
 
-              <TextField
-                required
-                sx={{ mt: 2 }}
+              <FormField
                 label="Birthday"
                 name="birthday"
                 type="date"
                 value={editUser?.birthday}
                 onChange={handleChange}
-                fullWidth
               />
             </DialogContent>
             <DialogActions sx={{ mb: 2, mr: 2 }}>
