@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { User } from "../types/types";
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, collection, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
 
 export const useProfileCard = () => {
@@ -17,5 +17,17 @@ export const useProfileCard = () => {
     getUsers();
   }, []);
 
-  return { user };
+  const updateUserInfo = async (updatedUser: User) => {
+    try {
+      if (user) {
+        const docRef = doc(db, "user", updatedUser.id);
+        await updateDoc(docRef, updatedUser);
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error("Error updating user", error);
+    }
+  };
+
+  return { user, updateUserInfo };
 };
