@@ -2,108 +2,128 @@ import {
   Avatar,
   Button,
   Dialog,
-  DialogActions,
-  DialogContent,
   DialogTitle,
+  DialogContent,
+  DialogActions,
   Paper,
-  TextField,
   Typography,
+  TextField,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { useProfileCard } from "../../hooks/useProfileCard";
-import { db } from "../../firebase";
-import { getDocs, collection, doc, updateDoc } from "firebase/firestore";
 
-interface User {
-  firstName: string;
-  lastName: string;
-  email: string;
-  birthday: string;
-}
+import React, { ChangeEvent } from "react";
+import { useProfileCard } from "../../hooks/useProfileCard";
+import { User } from "../../types/types";
 
 const ProfileCard = () => {
-  // const { user } = useProfileCard();
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const { user, updateUserInfo } = useProfileCard();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [isModalOpen, setIsOpenModal] = React.useState(false);
+  const [editUser, setEditUser] = React.useState(user);
+  const [formErrors, setFormErrors] = React.useState<{ [key: string]: string }>(
+    {}
+  );
 
-  const colRef = collection(db, "user");
-  const getUsers = async () => {
-    const data = await getDocs(colRef);
-    data.forEach((doc: any) => {
-      setUser(doc.data() as User);
-    });
-  };
+  React.useEffect(() => {
+    setEditUser(user);
+  }, [user]);
 
-  useEffect(() => {
-    getUsers();
-  }, []);
+  interface FormDataProps {
+    value?: string;
+    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+    label: string;
+    name: string;
+    type?: string;
+  }
 
-  const handleOpenDialog = () => {
-    setOpenDialog(true);
-    setEditUser(user ? { ...user } : null);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (editUser) {
-      setEditUser({ ...editUser, [name]: value });
+  const validateFormData = (user: User | null): boolean => {
+    if (!user) {
+      console.error("User is null");
+      return false;
     }
+
+    const { firstName, lastName, email, birthday } = user;
+    const errors: { [key: string]: string } = {};
+
+    if (!firstName) {
+      errors.firstName = "First name is required";
+    }
+    if (!lastName) {
+      errors.lastName = "Last name is required";
+    }
+    if (!email) {
+      errors.email = "Email is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        errors.email = "Invalid email format";
+      }
+    }
+    if (!birthday) {
+      errors.birthday = "Birthday date is required";
+    }
+
+    setFormErrors(errors);
+
+    // Check if there are any errors
+    return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (data: any) => {
-    if (editUser && user) {
-      const payload = {
-        firstName: editUser.firstName,
-        lastName: editUser.lastName,
-        birthday: editUser.birthday,
-        email: editUser.email,
-      };
-      try {
-        const userDocRef = doc(db, "user", data?.id);
-        await updateDoc(userDocRef, { payload });
-        getUsers();
-        console.log("User data updated successfully!");
-      } catch (error) {
-        console.error("Error updating user data:", error);
-      }
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditUser((prev) => (prev === null ? null : { ...prev, [name]: value }));
+    // Clear the error message for the current field
+    setFormErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+  };
+
+  const handleSubmit = () => {
+    if (editUser && validateFormData(editUser)) {
+      updateUserInfo(editUser);
+      setIsOpenModal(false);
+      console.log("User data updated successfully!");
     } else {
-      console.error("User data or edit data is null.");
+      console.error("User is null or form validation failed");
     }
   };
 
   return (
     <>
       {user && (
-        <>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 4,
-              mt: 2,
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "column",
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            mt: 2,
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "column",
+          }}
+        >
+          <Avatar
+            src="https://source.unsplash.com/random"
+            sx={{ width: 100, height: 100, mb: 2 }}
+          />
+          <Typography variant="h3">{`${user.firstName} ${user.lastName}`}</Typography>
+          <Typography sx={{ mt: 1.5 }}>{user.email}</Typography>
+          <Typography sx={{ mt: 1.5 }}>{user.birthday}</Typography>
+          <Button
+            onClick={() => setIsOpenModal(true)}
+            variant="contained"
+            size="small"
+            sx={{ p: 0.5, mt: 1.5 }}
+          >
+            edit
+          </Button>
+          <Dialog
+            open={isModalOpen}
+            onClose={(prev) => setIsOpenModal(!prev)}
+            PaperProps={{
+              component: "form",
+              onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
+                e.preventDefault();
+              },
             }}
           >
-            <Avatar
-              src="https://source.unsplash.com/random"
-              sx={{ width: 100, height: 100, mb: 2 }}
-            />
-            <Typography variant="h3">{`${user.firstName} ${user.lastName}`}</Typography>
-            <Typography sx={{ mt: 2 }}>{user.email}</Typography>
-            <Typography sx={{ mt: 2 }}>{user.birthday}</Typography>
-            <Button variant="outlined" onClick={handleOpenDialog}>
-              Edit
-            </Button>
-          </Paper>
-          <Dialog open={openDialog} onClose={handleCloseDialog}>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle color="black">Edit Profile</DialogTitle>
             <DialogContent>
               <TextField
                 autoFocus
@@ -112,8 +132,10 @@ const ProfileCard = () => {
                 name="firstName"
                 label="First Name"
                 fullWidth
-                value={editUser?.firstName || ""}
+                value={editUser?.firstName}
                 onChange={handleChange}
+                error={!!formErrors.firstName}
+                helperText={formErrors.firstName}
               />
               <TextField
                 margin="dense"
@@ -121,8 +143,10 @@ const ProfileCard = () => {
                 name="lastName"
                 label="Last Name"
                 fullWidth
-                value={editUser?.lastName || ""}
+                value={editUser?.lastName}
                 onChange={handleChange}
+                error={!!formErrors.lastName}
+                helperText={formErrors.lastName}
               />
               <TextField
                 margin="dense"
@@ -131,8 +155,10 @@ const ProfileCard = () => {
                 label="Email Address"
                 type="email"
                 fullWidth
-                value={editUser?.email || ""}
+                value={editUser?.email}
                 onChange={handleChange}
+                error={!!formErrors.email}
+                helperText={formErrors.email}
               />
               <TextField
                 margin="dense"
@@ -141,19 +167,33 @@ const ProfileCard = () => {
                 label="Birthday"
                 type="date"
                 fullWidth
-                value={editUser?.birthday || ""}
+                value={editUser?.birthday}
                 onChange={handleChange}
                 InputLabelProps={{
                   shrink: true,
                 }}
+                error={!!formErrors.birthday}
+                helperText={formErrors.birthday}
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDialog}>Cancel</Button>
-              <Button onClick={() => handleSubmit(user)}>Submit</Button>
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                onClick={handleSubmit}
+              >
+                Submit
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={(prev) => setIsOpenModal(!prev)}
+              >
+                Cancel
+              </Button>
             </DialogActions>
           </Dialog>
-        </>
+        </Paper>
       )}
     </>
   );
